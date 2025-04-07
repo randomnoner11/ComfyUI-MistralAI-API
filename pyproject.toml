@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-mistralai-api"
 description = "Mistral AI API's chat completion endpoint in ComfyUI"
-version = "1.0.0"
+version = "1.0.1"
 license = {file = "LICENSE"}
 
 [project.urls]
