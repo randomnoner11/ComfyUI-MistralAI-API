@@ -13,7 +13,7 @@ This node provides a straightforward way to interact with the [Mistral AI API](h
    The node doesn't introduce any hidden prompt additions. You have complete control over the instruction and the request sent to the API.
 
 * ![](/screenshots/example-use-2.png)
-   For Pixtral models, you can input images directly. The image will be downscaled to have a longest side of 1024 pixels before being processed.
+   For certain models, you can input images directly. The image will be downscaled to have a longest side of 1024 pixels before being processed.
 
 * ![](/screenshots/example-use-3.png)
 * ![](/screenshots/example-use-4.png)  
@@ -24,7 +24,8 @@ This node provides a straightforward way to interact with the [Mistral AI API](h
 
 ## Important Notes:
 
-* **Model Selection:** The list of available models is hardcoded within the node. It does not dynamically fetch the list from the Mistral API.
+* **Model Selection:** The list of available models is fetched on launch. If the API check slows down your startup, edit the configuration variable in `nodes.py` to use the hardcoded list.
+* **Vision Support:** Models that support image inputs are tagged with 🖼️ in the dropdown.
 * **Seed Randomization:** Unless you explicitly provide a seed value in the node's settings, the seed for the language model's response will be randomized server-side by Mistral AI.
 * **API Key:** You will need to save your Mistral AI API key in a file named `API-key.txt` within the node's directory for it to function correctly.
 

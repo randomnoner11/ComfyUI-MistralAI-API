@@ -10,8 +10,56 @@ import numpy as np
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+# --- CONFIGURATION ---
+ENABLE_REMOTE_MODELS = True  # Set to False to use only the hardcoded list
+# ---------------------
+
 with open(os.path.join(script_dir, "API-key.txt"), "r") as file:
     API_key = file.read().strip()
+
+FALLBACK_MODELS = [
+    "pixtral-large-latest",
+    "pixtral-12b-latest",
+    "ministral-3b-latest",
+    "ministral-8b-latest",
+    "ministral-14b-latest",
+    "open-mistral-nemo",
+    "mistral-small-latest",
+    "mistral-medium-latest",
+    "mistral-large-latest",
+]
+
+
+def get_mistral_models():
+    if not ENABLE_REMOTE_MODELS:
+        return FALLBACK_MODELS
+
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {API_key}",
+    }
+
+    try:
+        response = requests.get(
+            "https://api.mistral.ai/v1/models", headers=headers, timeout=5
+        )
+        if response.status_code == 200:
+            data = response.json()
+            model_list = []
+            for model in data.get("data", []):
+                model_name = model["id"]
+                if model.get("capabilities", {}).get("vision", False):
+                    model_name += " 🖼️"
+                model_list.append(model_name)
+
+            return sorted(model_list)
+
+    except Exception as e:
+        print(
+            f"MistralAPI Node: Failed to fetch models from API, using fallback. Error: {e}"
+        )
+
+    return FALLBACK_MODELS
 
 
 def _add_prompts_folder_path():
@@ -36,21 +84,11 @@ _add_prompts_folder_path()  # Call the function to register the path
 
 
 class InvokeMistralEndpoint:
-    MODELS = [
-        "pixtral-large-latest",
-        "pixtral-12b-latest",
-        "ministral-3b-latest",
-        "ministral-8b-latest",
-        "open-mistral-nemo",
-        "mistral-small-latest",
-        "mistral-large-latest",
-    ]
-
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "model": (InvokeMistralEndpoint.MODELS, {}),
+                "model": (get_mistral_models(), {}),
                 "temperature": (
                     "FLOAT",
                     {"default": 1.0, "min": 0.0, "max": 1.5, "step": 0.1},
@@ -149,6 +187,9 @@ class InvokeMistralEndpoint:
         context=None,
         image=None,
     ):
+
+        target_model = model.split()[0]  # Remove the emoji and whitespace
+
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
@@ -185,7 +226,7 @@ class InvokeMistralEndpoint:
             messages.append({"role": "user", "content": prompt})
 
         data = {
-            "model": model,
+            "model": target_model,
             "messages": messages,
             "temperature": temperature,
             "top_p": top_p,
